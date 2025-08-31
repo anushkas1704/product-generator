@@ -1,48 +1,49 @@
+# app.py
+import os
+from dotenv import load_dotenv
 import streamlit as st
-from transformers import pipeline
-import requests
-from io import BytesIO
+from huggingface_hub import InferenceClient
+import google.generativeai as genai
 from PIL import Image
 
-# -----------------------------
-# Hugging Face Setup
-# -----------------------------
-HF_API_KEY = "YOUR_HUGGINGFACE_API_KEY"  # Replace with your free API key from https://huggingface.co/settings/tokens
-headers = {"Authorization": f"Bearer {HF_API_KEY}"}
+# Load env 
+load_dotenv()
+HF_TOKEN = os.getenv("HF_API_KEY")
+GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
-# Text generation pipeline
-text_generator = pipeline("text-generation", model="distilgpt2")
+# Hugging Face client (Flux model)
+hf_client = InferenceClient(
+    "black-forest-labs/FLUX.1-schnell",
+    token=HF_TOKEN
+)
 
-# -----------------------------
+# Gemini config
+genai.configure(api_key=GEMINI_KEY)
+
 # Streamlit UI
-# -----------------------------
-st.set_page_config(page_title="AI Product Generator", layout="centered")
-st.title("🛍️ AI Product Description + Image Generator")
-st.write("Generate product descriptions + images for free using Hugging Face models")
+st.set_page_config(page_title="AI Product Generator", page_icon="✨")
+st.title("✨ AI Product Generator")
 
-# Input fields
-product = st.text_input("Enter product name")
-keywords = st.text_input("Enter keywords (comma separated)")
-tone = st.selectbox("Choose tone", ["Professional", "Casual", "Persuasive", "Funny"])
+st.write("Enter your product idea and let AI generate a description & an image.")
 
-if st.button("Generate"):
-    # --- Generate Description ---
-    with st.spinner("Generating description..."):
-        prompt = f"Write a {tone.lower()} product description for {product}. Keywords: {keywords}."
-        desc = text_generator(prompt, max_length=80, do_sample=True)[0]["generated_text"]
-        st.subheader("📄 Product Description")
-        st.write(desc)
+# Input
+product_name = st.text_input("🛍️ Product Name", placeholder="Eco-friendly water bottle for travelers")
+generate_btn = st.button("Generate")
 
-    # --- Generate Image ---
-    with st.spinner("Generating image..."):
-        api_url = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2"
-        payload = {"inputs": f"Product photo of {product}, studio lighting, minimalistic, professional"}
-        
-        response = requests.post(api_url, headers=headers, json=payload)
+if generate_btn and product_name:
+    with st.spinner("Generating product description..."):
+        # Gemini text generation
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        prompt = f"Generate a creative, marketing-friendly product description for: {product_name}"
+        response = model.generate_content(prompt)
+        description = response.text
+    
+    st.subheader("📄 Product Description")
+    st.write(description)
 
-        if response.status_code == 200:
-            image = Image.open(BytesIO(response.content))
-            st.subheader("🖼️ Product Image")
-            st.image(image, caption=product, use_column_width=True)
-        else:
-            st.error("Image generation failed. Try again.")
+    with st.spinner("Generating product image..."):
+        # Flux image gen
+        image = hf_client.text_to_image(product_name)
+    
+    st.subheader("🖼️ Product Image")
+    st.image(image, caption=product_name)
