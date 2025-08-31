@@ -4,7 +4,7 @@
 
 This project is a simple **AI-powered tool** that allows users to:  
 - Generate **detailed product descriptions** using **Google Gemini API**  
-- Generate **product images** using **Hugging Face Stable Diffusion API**  
+- Generate **product images** using **Hugging Face FLUX.1-schnell API**  
 - Interact with everything via a **Streamlit frontend**  
 
 ---
@@ -22,7 +22,7 @@ This project is a simple **AI-powered tool** that allows users to:
 ## 🛠️ Tech Stack  
 - **Frontend/UI:** [Streamlit](https://streamlit.io/)  
 - **Text Generation (Description):** Google Gemini API (`gemini-pro`)  
-- **Image Generation:** Hugging Face Stable Diffusion (`runwayml/stable-diffusion-v1-5`)  
+- **Image Generation:** Hugging Face FLUX.1-schnell (`black-forest-labs/FLUX.1-schnell`)  
 
 ---
 
@@ -101,5 +101,6 @@ Then open the local URL (usually `http://localhost:8501/`) in your browser.
 3. Both are displayed side-by-side in the Streamlit UI.
 
 ---
+
 
 
